@@ -4,234 +4,165 @@
 import java.util.*;
 import java.io.*;
 public class Emir_Aydin_S020843 {
-    public static class State{
-        String name;
-        boolean finaal=false;
-        boolean start= false;
-        public Map<String, List<State>> trans=new HashMap<String, List<State>>();
 
-        State(String s){
-            this.name=s;
-            add_trans("1", new ArrayList<State>());
-            add_trans("0", new ArrayList<State>());
+    public static class Rule{
+        String currentState,currentSymbol,newSymbol,newState,direction;
+
+
+        public Rule(String curSt,String curSym,String newSym,String d,String newSt){
+                this.currentState = curSt;
+                this.currentSymbol = curSym;
+                this.newSymbol = newSym;
+                this.newState = newSt;
+                this.direction = d;
+
         }
-        State(){
-            add_trans("1", new ArrayList<State>());
-            add_trans("0", new ArrayList<State>());
+        public Rule(){}
+
+        public void setCurrentState(String currentState) {
+            this.currentState = currentState;
         }
-        public void set_name(String s){
-            this.name=s;
+
+        public void setCurrentSymbol(String currentSymbol) {
+            this.currentSymbol = currentSymbol;
         }
-        public void add_trans(String st, List <State>s){
-            trans.put(st,s);
+
+        public void setDirection(String direction) {
+            this.direction = direction;
         }
-        public List<State> next_state(String c){
-            return trans.get(c);
+
+        public void setNewState(String newState) {
+            this.newState = newState;
         }
-        public Map<String, List<State>> get_transition(){
-            return this.trans;
-        }
-        public String getName(){
-            return this.name;
-        }
-        public boolean is_final(){
-            return finaal;
-        }
-        public void set_final(boolean f){
-            this.finaal=f;
-        }
-        public boolean is_start(){
-            return start;
-        }
-        public void set_start(boolean s){
-            this.start=s;
+
+        public void setNewSymbol(String newSymbol) {
+            this.newSymbol = newSymbol;
         }
     }
-    public static String edit_String(String input){
-        // Converting input string to character array
-        char temp[] = input.toCharArray();
 
-        // Sorting temp array using
-        Arrays.sort(temp);
+    public static void fit_array (String[] arr,Scanner scn){
+        for(int i = 0; i < arr.length; i++){
+            arr[i] = scn.next();
+        }
 
-        // Deleting the duplicate elements in array
-        int index = 0;
-        for(int i=0;i<temp.length;i++){
-            int j;
-            for(j=0;j<i;j++){
-                if (temp[i] == temp[j])
-                {
+    }
+    public static void main(String[] args) throws FileNotFoundException{
+
+        File myFile = new File( "Input_Emir_Aydın_S020843.txt");
+        Scanner reader= new Scanner(myFile);
+         //while(reader.hasNextLine()){}
+
+        int n_input_alph = Integer.parseInt(reader.next());
+        String [] alphabet = new String[n_input_alph];
+        fit_array(alphabet,reader);
+
+        int n_tape = Integer.parseInt(reader.next());
+        ArrayList<String> tapes= new ArrayList<>();
+        for(int i = 0; i < n_tape; i++){
+            tapes.add(reader.next()) ;
+        }
+        String blank = reader.next();
+        tapes.add(blank) ;
+
+        int n_states = Integer.parseInt(reader.next());
+        String[] all_states = new String [n_states];
+        fit_array(all_states,reader);
+
+        String init_state = reader.next();
+        String accept_state = reader.next();
+        String reject_state = reader.next();
+
+        int n_rules = (all_states.length-2) * tapes.size();
+        ArrayList<Rule> rules=new ArrayList<>();
+        for(int k=0; k < n_rules; k++){
+            String st1=reader.next();
+            String sym1=reader.next();
+            String Sym2=reader.next();
+            String direction = reader.next();
+            String st2=reader.next();
+            Rule rl= new Rule(st1,sym1,Sym2,direction,st2);
+            rules.add(rl);
+        }
+
+        ArrayList<String> strings_to_detect=new ArrayList<>();
+        //reader.next()
+        while(reader.hasNext()){
+            String input_s=reader.next();
+            strings_to_detect.add(input_s);
+        }
+
+        reader.close();
+
+        for(String s : strings_to_detect){
+            s="b"+s+"b";
+            String[] inputs = s.split("");
+
+            //System.out.println(inputs[0]);
+
+            Rule initial_rule=new Rule();
+            for(Rule rlu:rules){
+                if(rlu.currentState.equals(init_state)&&rlu.currentSymbol.equals(inputs[1])){
+                    initial_rule.setCurrentState(rlu.currentState);
+                    initial_rule.setCurrentSymbol(rlu.currentSymbol);
+                    initial_rule.setNewSymbol(rlu.newSymbol);
+                    initial_rule.setDirection(rlu.direction);
+                    initial_rule.setNewState(rlu.newState);
                     break;
                 }
             }
-            if (j == i)
-            {
-                temp[index++] = temp[i];
+            ArrayList<String> visitedStates = new ArrayList<>();
+
+            String current_st=init_state;
+            int iter=1;
+            String current_symbol=inputs[1];
+            //String nextState= initial_rule.newState;
+            String result="";
+            while (!current_st.equals(accept_state) && !current_st.equals(reject_state)){
+                visitedStates.add(current_st);
+                Rule ruletoapply=null;
+                for( Rule rule:rules){
+                    if(rule.currentState.equals(current_st)&&rule.currentSymbol.equals(current_symbol)){
+                        ruletoapply=rule;
+                        break;
+
+                    }
+                }
+                inputs[iter]=ruletoapply.newSymbol;
+                if(ruletoapply.direction.equals("R")){
+                    iter++;
+                    current_symbol=inputs[iter];
+                }
+                if(ruletoapply.direction.equals("L")){
+                    iter--;
+                    current_symbol=inputs[iter];
+
+                }
+                current_st=ruletoapply.newState;
             }
+            if(current_st.equals(accept_state)){
+                visitedStates.add(accept_state);
+                result=("Accepted");
+            }
+            if(current_st.equals(reject_state)){
+                visitedStates.add(reject_state);
+                result=("Rejected");
+
+            }
+            System.out.println("* * * * * * * * * * * * ");
+            System.out.print("ROUT: ");
+            for(String state:visitedStates){
+                System.out.print(state+" ");
+            }
+            System.out.println();
+            System.out.print("RESULT: "+result+"\n");
+            System.out.println("* * * * * * * * * * * * ");
 
 
         }
-        // Returning new sorted and edited string
-        return String.valueOf(Arrays.copyOf(temp, index));
-    }
-    public static void main(String[] args) throws FileNotFoundException {
 
-        File myFile = new File( "NFA2.txt");
-        String dfa="";
-        ArrayList<State>nfa_states=new ArrayList<>();
-        ArrayList<State>dfa_states=new ArrayList<>();
 
-        Scanner nfa= new Scanner(myFile);
-        while(nfa.hasNextLine()) {
-            String line = nfa.nextLine();
-            while (!line.equals("STATES")) { // reading ALPHABET
-                dfa+=(line)+"\n";
-                line = nfa.nextLine();
-            }
-            line = nfa.nextLine();
-            while (!line.equals("START")) { // reading STATES
-                State newSt= new State(line);
-                nfa_states.add(newSt);
-                line = nfa.nextLine();
-            }
-            line = nfa.nextLine();
-            while (!line.equals("FINAL")) { // reading START state
-                for (State s: nfa_states) {
-                    if(s.getName().equals(line)){
-                        s.set_start(true);
-                    }
-                }
-                line = nfa.nextLine();
-            }
-            line = nfa.nextLine();
-            while (!line.equals("TRANSITIONS")) { // reading FINAL state
-                for (State s: nfa_states) {
-                    if(s.getName().equals(line)){
-                        s.set_final(true);
-                    }
-                }
-                line = nfa.nextLine();
-            }
-            line = nfa.next();
-            while (!line.equals("END")) { // reading TRANSITIONS
-                String st=line;
-                String tr= nfa.next();
-                //System.out.println(tr);
-                String nextName=nfa.next();
-                for (State s: nfa_states) {
-                    if(s.getName().equals(st)){
-                        for (State s0: nfa_states){
-                            if(s0.getName().equals(nextName)){
 
-                                s.get_transition().get(tr).add(s0);
-                            }
-                        }
-                    }
 
-                }
-                //System.out.println(line+" " + tr + " "+nextName);
-                line = nfa.next();
 
-            }
-            if (line.equals("END ")) {
-                break;
-            }
-        }
-        nfa.close();
-        //System.out.println(dfa); //print the Alphabet in dfa output
-
-        for (State first:nfa_states) {
-            if(first.is_start()) {
-                dfa_states.add(first);
-            }
-        }
-
-        int length=dfa_states.size();
-        for(int i=0;i<length;i++) {
-            State nextly=dfa_states.get(i);
-            State n1 = new State();
-            State n2 = new State();
-            String next1names = "";
-            String next0names = "";
-            if(!nextly.get_transition().get("0").isEmpty()) {
-                for (State s : nextly.get_transition().get("0")) {
-                    if (s.is_final()) {
-                        n2.set_final(true);
-                    }
-                    next0names += s.getName();
-                    for (State sub : s.get_transition().get("0")) {
-                        n2.get_transition().get("0").add(sub);
-                    }
-                    for (State sub : s.get_transition().get("1")) {
-                        n2.get_transition().get("1").add(sub);
-                    }
-
-                }
-                String name0=edit_String(next0names);
-                nextly.get_transition().get("0").clear();
-                nextly.get_transition().get("0").add(n2);
-                n2.set_name(name0);
-                boolean n2c = false;
-                for (int k = 0; k < dfa_states.size(); k++) {
-                    if (dfa_states.get(k).getName().equals(n2.getName())) {
-                        n2c = true;
-                    }
-                }
-                if (!n2c) {
-                    dfa_states.add(n2);
-                    length++;
-                }
-            }
-            if(!nextly.get_transition().get("1").isEmpty()) {
-                for (State s : nextly.get_transition().get("1")) {
-                    if (s.is_final()) {
-                        n1.set_final(true);
-                    }
-                    next1names += s.getName();
-                    for (State sub : s.get_transition().get("0")) {
-                        n1.get_transition().get("0").add(sub);
-                    }
-                    for (State sub : s.get_transition().get("1")) {
-                        n1.get_transition().get("1").add(sub);
-                    }
-                }
-                String name1= edit_String(next1names);
-                nextly.get_transition().get("1").clear();
-                nextly.get_transition().get("1").add(n1);
-                n1.set_name(name1);
-                boolean n1c = false;
-                for (int j = 0; j < dfa_states.size(); j++) {
-                    if (dfa_states.get(j).getName().equals(n1.getName())) {
-                        n1c = true;
-                    }
-                }
-                if (!n1c) {
-                    dfa_states.add(n1);
-                    length++;
-                }
-            }
-        }
-        dfa+="STATES"+"\n";
-        for(State a:dfa_states){
-            dfa+= a.getName()+ "\n";
-        }
-        dfa+="START"+"\n"+dfa_states.get(0).getName()+"\n";
-        dfa+="FINAL"+"\n";
-        for(State a:dfa_states){
-            if(a.is_final()) {
-                dfa+=(a.getName())+"\n";
-            }
-        }
-        dfa+="TRANSITIONS"+"\n";
-        for(State a:dfa_states){
-            for(State ss: a.get_transition().get("0")){
-                dfa+= a.getName()+" "+"0"+" "+ss.getName()+"\n";
-            }
-            for(State ss: a.get_transition().get("1")){
-                dfa+= a.getName()+" "+"1"+" "+ss.getName()+"\n";
-            }
-        }
-        dfa+="END";
-        System.out.println(dfa);
     }
 }
